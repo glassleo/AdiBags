@@ -1,10 +1,10 @@
-## Interface: 90105
+## Interface: 90005
 
 ## Title: AdiBags Configuration
 ## Notes: Adirelle's bag addon.
 ## Author: Adirelle
-## Version: @project-version@
-## X-Date: @project-date-iso@
+## Version: v1.9.23
+## X-Date: 2021-03-13T22:28:46Z
 ## X-Part-Of: AdiBags
 ## LoadOnDemand: 1
 ## Dependencies: AdiBags
@@ -21,5 +21,5 @@
 ..\AdiBags\config\Options.lua
 
 #@debug@
-## Version: DEV
+# ## Version: DEV
 #@end-debug@
