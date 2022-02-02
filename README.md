@@ -4,7 +4,7 @@ This is my forked and heavily modified version of [AdiBags](https://github.com/A
 
 All credit for this wonderful addon goes to Adirelle.
 
-It is intended to be used together with my AdiBags plugin/extension [AdiBags_Zigi](https://github.com/glassleo/AdiBags_Zigi).
+It is intended to be used together with my AdiBags plugin/extension [AdiBags_Zigi](https://github.com/glassleo/AdiBags_Zigi). It also requires [Media_Newsom](https://github.com/glassleo/Media_Newsom) for some textures for now.
 
 ## Changes
 
