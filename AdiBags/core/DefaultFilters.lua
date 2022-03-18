@@ -58,6 +58,7 @@ function addon:SetupDefaultFilters()
 	-- Define global ordering
 	self:SetCategoryOrders{
 		[QUEST] = 40,
+		["Mythic Keystone"] = 35,
 		["Zone"] = 30,
 		[TRADE_GOODS] = 20,
 		["Recipe"] = 19,
