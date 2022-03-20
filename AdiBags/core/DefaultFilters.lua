@@ -69,6 +69,7 @@ function addon:SetupDefaultFilters()
 		[CONSUMABLE] = -10,
 		[MISCELLANEOUS] = -20,
 		[AMMUNITION] = -30,
+		["Unbound"] = -35,
 		["Container"] = -40,
 		[JUNK] = -50,
 	}
