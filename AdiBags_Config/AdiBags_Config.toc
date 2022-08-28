@@ -1,9 +1,9 @@
-## Interface: 90205
+## Interface: 90207
 
 ## Title: AdiBags Configuration
 ## Notes: Adirelle's bag addon
 ## Author: Adirelle
-## Version: 9.2.0
+## Version: 9.2.7
 ## X-Date: 2021-03-13T22:28:46Z
 ## X-Part-Of: AdiBags
 ## LoadOnDemand: 1
