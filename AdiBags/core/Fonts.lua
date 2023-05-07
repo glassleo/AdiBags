@@ -76,7 +76,7 @@ function proto:SetSetting(info, value, ...)
 			return
 		end
 		db[name] = value
-		self:SetFont(LSM:Fetch(FONT, db.name), db.size)
+		self:SetFont(LSM:Fetch(FONT, db.name), db.size, "")
 	else
 		return
 	end
@@ -96,7 +96,7 @@ end
 
 function proto:ApplySettings()
 	local db = self:GetDB()
-	self:SetFont(LSM:Fetch(FONT, db.name), db.size)
+	self:SetFont(LSM:Fetch(FONT, db.name), db.size, "")
 	self:SetTextColor(db.r, db.g, db.b)
 end
 
@@ -149,7 +149,7 @@ function addon:CreateFontOptions(font, title, order)
 		handler = font,
 		set = 'SetSetting',
 		get = 'GetSetting',
-		disabled = false,
+		disabled = function() return addon.db.profile.theme.currentTheme == 'default' end,
 		args = {
 			name = {
 				name = L['Font'],
@@ -164,7 +164,7 @@ function addon:CreateFontOptions(font, title, order)
 				order = 20,
 				min = mediumSize - 8,
 				max = mediumSize + 8,
-				step = 4,
+				step = 1,
 			},
 			color = {
 				name = L['Color'],
@@ -176,7 +176,7 @@ function addon:CreateFontOptions(font, title, order)
 				name = L['Reset'],
 				type = 'execute',
 				order = 40,
-				disabled  = 'IsDefault',
+				disabled = function() return addon.db.profile.theme.currentTheme == 'default' end,
 				func = 'ResetSettings',
 			},
 		},

@@ -17,11 +17,10 @@
 # You should have received a copy of the GNU General Public License
 # along with AdiBags.  If not, see <http://www.gnu.org/licenses/>.
 
-## Interface: 1000100
+## Interface: 30400
 
-## Title: AdiBags (Newsom)
-## IconTexture: 133633
-## Notes: Adirelle's bag addon, heavily modified by Newsom
+## Title: AdiBags
+## Notes: Adirelle's bag addon.
 ## Author: Adirelle
 ## Version: v1.10.0
 ## SavedVariables: AdiBagsDB
@@ -55,10 +54,6 @@ core\Layout.lua
 core\OO.lua
 
 widgets\LayeredRegion.lua
-widgets\grid\Dropzone.lua
-widgets\grid\Cell.lua
-widgets\grid\Column.lua
-widgets\grid\Grid.lua
 widgets\ContainerFrame.lua
 widgets\BagSlots.lua
 widgets\ItemButton.lua

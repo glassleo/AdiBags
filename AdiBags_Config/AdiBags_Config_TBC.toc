@@ -1,8 +1,7 @@
-## Interface: 100002
+## Interface: 20504
 
-## Title: AdiBags (Newsom) Configuration
-## IconTexture: 133633
-## Notes: Adirelle's bag addon, heavily modified by Newsom
+## Title: AdiBags Configuration
+## Notes: Adirelle's bag addon.
 ## Author: Adirelle
 ## Version: v1.10.0
 ## X-Date: 2023-01-08T17:55:40Z

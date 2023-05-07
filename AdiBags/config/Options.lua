@@ -35,6 +35,7 @@ local unpack = _G.unpack
 
 local safecall = addon.safecall
 
+local AceGUI = LibStub("AceGUI-3.0");
 local AceConfigDialog = LibStub('AceConfigDialog-3.0')
 local LSM = LibStub('LibSharedMedia-3.0')
 
@@ -235,25 +236,70 @@ local function UpdateFilterOrder()
 	end
 end
 
+local function CreateBagOptions(name, key)
+	local option = {
+		name = L[name],
+		type = 'group',
+		args = {
+			bagFont = addon:CreateFontOptions(addon.fonts[key].bagFont, L["Bag title"], 5),
+			sectionFont = addon:CreateFontOptions(addon.fonts[key].sectionFont, L["Section header"], 6),
+			background = {
+				name = L['Background'],
+				type = 'select',
+				disabled = function() return addon.db.profile.theme.currentTheme == 'default' end,
+				dialogControl = 'LSM30_Background',
+				values = AceGUIWidgetLSMlists.background,
+				order = 10,
+				arg = { "theme", key, "background" },
+			},
+			insets = {
+				name = L['Insets'],
+				type = 'range',
+				disabled = function() return addon.db.profile.theme.currentTheme == 'default' end,
+				order = 20,
+				min = -16,
+				max = 16,
+				step = 0.1,
+				arg = { "theme", key, "insets" },
+			},
+			border = {
+				name = L['Border'],
+				type = 'select',
+				disabled = function() return addon.db.profile.theme.currentTheme == 'default' end,
+				dialogControl = 'LSM30_Border',
+				values = AceGUIWidgetLSMlists.border,
+				order = 30,
+				arg = { "theme", key, "border" },
+			},
+			borderWidth = {
+				name = L['Border Width'],
+				type = 'range',
+				disabled = function() return addon.db.profile.theme.currentTheme == 'default' end,
+				order = 40,
+				min = 1,
+				max = 64,
+				step = 0.1,
+				arg = { "theme", key, "borderWidth" },
+			},
+		color = {
+				name = L['Color'],
+				type = 'color',
+				disabled = function() return addon.db.profile.theme.currentTheme == 'default' end,
+				order = 50,
+				hasAlpha = true,
+				arg = { "theme", key, "color" },
+			},
+		}
+	}
+	return option
+end
+
 --------------------------------------------------------------------------------
 -- Core options
 --------------------------------------------------------------------------------
 
 local function GetOptions()
 	if options then return options end
-
-	local lockOption = {
-		name = function()
-			return addon.anchor:IsShown() and L["Lock anchor"] or L["Unlock anchor"]
-		end,
-		desc = L["Click to toggle the bag anchor."],
-		type = 'execute',
-		order = 110,
-		func = function()
-			addon:ToggleAnchor()
-		end,
-		disabled = function(info) return (info.handler and info.handler:IsDisabled(info)) or addon.db.profile.positionMode ~= 'anchored' end,
-	}
 
 	filterOptions._desc = {
 		name = L['Filters are used to dispatch items in bag sections. One item can only appear in one section. If the same item is selected by several filters, the one with the highest priority wins.'],
@@ -270,11 +316,11 @@ local function GetOptions()
 		end
 	end
 	options = {
-		--[===[@debug@
+		--[==[@debug@
 		name = addonName..' DEV',
-		--@end-debug@]===]
+		--@end-debug@]==]
 		--@non-debug@
-		name = addonName..' v1.9.23',
+		name = addonName..' v1.10.0',
 		--@end-non-debug@
 		type = 'group',
 		handler = addon:GetOptionHandler(addon),
@@ -295,16 +341,6 @@ local function GetOptions()
 				width = 'double',
 				type = 'toggle',
 				order = 110,
-			},
-			muteBugGrabber = {
-				name = L['No error reports'],
-				desc = L['Check to disable error reporting.'],
-				type = 'toggle',
-				order = 115,
-				confirm = function(_, value) return value and L["If the addon seems not to work properly, please re-enable error reporting and check again before filing a bug ticket."] end,
-				get = function() return addon.db.global.muteBugGrabber end,
-				set = function(_, v) addon.db.global.muteBugGrabber = v end,
-				hidden = not addon.BugGrabber,
 			},
 			bags = {
 				name = L['Bags'],
@@ -330,13 +366,6 @@ local function GetOptions()
 								type = 'toggle',
 								order = 95,
 							},
-							autoDeposit = {
-								name = L["Deposit reagents"],
-								desc = L["Automtically deposit all reagents into the reagent bank when you talk to the banker."],
-								type = 'toggle',
-								order = 110,
-								disabled = function() return not IsReagentBankUnlocked() end,
-							},
 						}
 					},
 					position = {
@@ -345,30 +374,6 @@ local function GetOptions()
 						order = 100,
 						inline = true,
 						args = {
-							positionMode = {
-								name = L['Position mode'],
-								desc = L['Select how the bags are positionned.'],
-								type = 'select',
-								order = 100,
-								values = {
-									anchored = L['Anchored'],
-									manual = L['Manual'],
-								}
-							},
-							toggleAnchor = lockOption,
-							reset = {
-								name = L['Reset position'],
-								desc = L['Click there to reset the bag positions and sizes.'],
-								type = 'execute',
-								order = 120,
-								func = function() addon:ResetBagPositions() end,
-							},
-							hideAnchor = {
-								name = L['Do not show anchor point'],
-								desc = L['Hide the colored corner shown when you move the bag.'],
-								type = 'toggle',
-								order = 125,
-							},
 							scale = {
 								name = L['Scale'],
 								desc = L['Use this to adjust the bag scale.'],
@@ -377,7 +382,7 @@ local function GetOptions()
 								isPercent = true,
 								min = 0.1,
 								max = 3.0,
-								step = 0.1,
+								step = 0.001,
 								set = function(info, newScale)
 									addon.db.profile.scale = newScale
 									addon:LayoutBags()
@@ -411,6 +416,19 @@ local function GetOptions()
 									addon:SendMessage('AdiBags_LayoutChanged')
 								end,
 							},
+							--[[
+							gridLayout = {
+								name = L['(BETA) Grid Layout'],
+								desc = L['When enabled, AdiBags switches to a grid layout with dragable sections.'],
+								type = 'toggle',
+								order = 135,
+								set = function(info, gridLayout)
+									addon.db.profile.gridLayout = gridLayout
+									ReloadUI()
+									addon:SendMessage('AdiBags_GridLayoutChanged')
+								end,
+							},
+							--]]
 							columnWidth = {
 								name = L['Column width'],
 								desc = L['Adjust the width of the bag columns.'],
@@ -440,77 +458,80 @@ local function GetOptions()
 					},
 				},
 			},
-			skin = {
-				name = L['Skin'],
+			theme = {
+				name = L['Theme'],
 				type = 'group',
 				order = 150,
 				args = {
-					bagFont = addon:CreateFontOptions(addon.bagFont, L["Bag title"], 10),
-					sectionFont = addon:CreateFontOptions(addon.sectionFont, L["Section header"], 15),
-					background = {
-						name = L['Bag background'],
+					-- TODO(lobato): Implement at a later date.
+					currentTheme = {
+						name = L['Theme Selection'],
+						desc = L['Select the theme to use for displaying the bags.'],
+						type = 'select',
+						order = 10,
+						values = function()
+							local themes = {}
+							for name in pairs(addon.db.profile.theme.themes) do
+								themes[name] = name
+							end
+							return themes
+						end,
+						get = function()
+							return addon.db.profile.theme.currentTheme or 'default'
+						end,
+						set = function(_, value)
+							addon:SetTheme(value)
+						end,
+						arg = { "theme", "currentTheme" },
+					},
+					themeControls = {
+						name = L['Theme Controls'],
 						type = 'group',
 						inline = true,
-						order = 20,
 						args = {
-							texture = {
-								name = L['Texture'],
-								type = 'select',
-								dialogControl = 'LSM30_Background',
-								values = AceGUIWidgetLSMlists.background,
+							topDescription = {
+								type = 'description',
+								order = 0,
+								name = L['All controls are disabled if the selected theme is the default theme. Make a new theme below to edit your theme.'],
+							},
+							saveTheme = {
+								name = L['Save Theme'],
+								desc = L['Save the current theme settings to the selected theme name.'],
+								type = 'execute',
 								order = 10,
-								arg = { "skin", "background" },
+								confirm = function() return "Are you sure you want to save and overwrite the theme '"..addon.db.profile.theme.currentTheme.."'?" end,
+								disabled = function() return addon.db.profile.theme.currentTheme == 'default' end,
+								func = function() addon:SaveTheme() end,
 							},
-							insets = {
-								name = L['Insets'],
-								type = 'range',
+							deleteTheme = {
+								name = L['Delete Theme'],
+								desc = L['Delete the selected theme from the database.'],
+								type = 'execute',
 								order = 20,
-								arg = { "skin", "insets" },
-								min = -16,
-								max = 16,
-								step = 1,
+								confirm = function() return "Are you sure you want to delete the theme '"..addon.db.profile.theme.currentTheme.."'?" end,
+								disabled = function() return addon.db.profile.theme.currentTheme == 'default' end,
+								func = function() addon:DeleteTheme() end,
 							},
-							border = {
-								name = L['Border'],
-								type = 'select',
-								dialogControl = 'LSM30_Border',
-								values = AceGUIWidgetLSMlists.border,
+							bottomDescription = {
+								type = 'description',
 								order = 30,
-								arg = { "skin", "border" },
+								name = L['Type in a new theme in the input below and hit enter to create a new theme.'],
 							},
-							borderWidth = {
-								name = L['Border width'],
-								type = 'range',
+							newThemeName = {
+								name = L['New Theme Name'],
+								desc = L['Type in the name of the new theme to create.'],
+								type = 'input',
 								order = 40,
-								arg = { "skin", "borderWidth" },
-								min = 1,
-								max = 64,
-								step = 1,
+								validate = function(_, value) return (not addon:ThemeExists(value) and true) or "A theme by that name already exists." end,
+								get = function() return "" end,
+								set = function(_, value) addon:NewTheme(value) addon:SetTheme(value) end,
 							},
-							backpackColor = {
-								name = L['Backpack color'],
-								type = 'color',
-								order = 50,
-								hasAlpha = true,
-								arg = { "skin", "BackpackColor" },
-							},
-							bankColor = {
-								name = L['Bank color'],
-								type = 'color',
-								order = 60,
-								hasAlpha = true,
-								arg = { "skin", "BankColor" },
-							},
-							reagentBankColor = {
-								name = L['Reagent bank color'],
-								type = 'color',
-								order = 70,
-								hasAlpha = true,
-								arg = { "skin", "ReagentBankColor" },
-							},
-						},
-					}
-				},
+						}
+					},
+					backpack = CreateBagOptions("Backpack", "backpack"),
+					bank = CreateBagOptions("Bank", "bank"),
+					reagentBank = CreateBagOptions("Reagent Bank", "reagentBank"),
+				}
 			},
 			items = {
 				name = L['Items'],
@@ -554,20 +575,14 @@ local function GetOptions()
 									return info.handler:IsDisabled(info) or not addon.db.profile.qualityHighlight
 								end,
 							},
-							junkQualityHighlight = {
-								name = L['Highlight junk'],
-								desc = L['Check this to make poor quality items have a red border.'],
+							dimJunk = {
+								name = L['Dim junk'],
+								desc = L['Check this to have poor quality items dimmed.'],
 								type = 'toggle',
 								order = 225,
 								disabled = function(info)
 									return info.handler:IsDisabled(info) or not addon.db.profile.qualityHighlight
 								end,
-							},
-							dimJunk = {
-								name = L['Dim junk'],
-								desc = L['Check this to have poor quality items dimmed.'],
-								type = 'toggle',
-								order = 230,
 							},
 						},
 					},
@@ -667,6 +682,15 @@ local function GetOptions()
 		},
 		plugins = {}
 	}
+	if addon.isRetail then
+		options["args"]["bags"]["args"]["automatically"]["args"]["autoDeposit"] = {
+			name = L["Deposit reagents"],
+			desc = L["Automtically deposit all reagents into the reagent bank when you talk to the banker."],
+			type = 'toggle',
+			order = 110,
+			disabled = function() return not IsReagentBankUnlocked() end,
+		}
+	end
 	hooksecurefunc(addon, "OnModuleCreated", OnModuleCreated)
 	for name, module in addon:IterateModules() do
 		OnModuleCreated(addon, module)

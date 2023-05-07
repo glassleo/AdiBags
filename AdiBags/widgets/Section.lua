@@ -57,7 +57,8 @@ local HEADER_SIZE = addon.HEADER_SIZE
 --------------------------------------------------------------------------------
 
 local categoryOrder = {
-	[L["Free Space"]] = -100
+	[L["Free space"]] = -100,
+	[L["Reagent Free space"]] = -101
 }
 
 function addon:SetCategoryOrder(name, order)
@@ -92,8 +93,6 @@ function sectionProto:OnCreate()
 
 	local header = CreateFrame("Button", nil, self)
 	header.section = self
-	addon.sectionFont:SetFont("Fonts\\FRIZQT__.TTF", 13)
-	header:SetNormalFontObject(addon.sectionFont)
 	header:SetPoint("TOPLEFT", 0, 0)
 	header:SetPoint("TOPRIGHT", SECTION_SPACING - ITEM_SPACING, 0)
 	header:SetHeight(HEADER_SIZE)
@@ -133,12 +132,14 @@ function sectionProto:OnAcquire(container, name, category)
 	self.count = 0
 	self.container = container
 	self:RegisterMessage('AdiBags_OrderChanged', 'FullLayout')
+	self.Header:SetNormalFontObject(addon.fonts[string.lower(container.name)].sectionFont)
 
 	local text = self.name
 	text = string.gsub(text, "(%d+). ", "")
 
 	if name == "Quest" and category == "Quest" then text = CreateAtlasMarkup("QuestNormal") .. " " .. name end
 	if name == "Junk" and category == "Junk" then text = CreateAtlasMarkup("bags-junkcoin", 20, 18) .. name end
+	if name == "Recipe" and category == "Recipe" then text = "|cffee6622" .. name .. "|r" end
 
 	self.Header:SetText(text)
 	self:UpdateHeaderScripts()
@@ -151,6 +152,19 @@ function sectionProto:OnRelease()
 	self.name = nil
 	self.category = nil
 	self.container = nil
+end
+
+function sectionProto:UpdateFont()
+	local font
+	if self.container.isReagentBank then
+		font = addon.fonts.reagentBank.sectionFont
+		self.Header:SetNormalFontObject(font)
+		font:ApplySettings()
+	else
+		font = addon.fonts[string.lower(self.container.name)].sectionFont
+		self.Header:SetNormalFontObject(font)
+		font:ApplySettings()
+	end
 end
 
 function sectionProto:GetOrder()
@@ -189,18 +203,21 @@ local DispatchOnReceiveDrag = function(...) return scriptDispatcher:Fire('Dispat
 
 function sectionProto:ShowHeaderTooltip(header, tooltip)
 	local self = header.section
-	local name, category = self.name, self.category
-	name = string.gsub(name or "", "(%d+). ", "")
-
-	if category == "Tradeskill" then category = "Professions" end
-
-	--if name == "Quest" and category == "Quest" then name = CreateAtlasMarkup("QuestNormal") .. " " .. name end
-
 	tooltip:SetPoint("BOTTOMRIGHT", self.container, "TOPRIGHT", 0, 4)
-	if self.category ~= self.name then
-		tooltip:AddDoubleLine(name, category, 1, 1, 1)
+
+	local name = self.name
+	local category = self.category
+	local text = name
+	local cattext = category
+	text = string.gsub(text, "(%d+). ", "")
+
+	if category == "Tradeskill" then cattext = "Profession" end
+
+	if cattext and cattext ~= text then
+		tooltip:AddLine(text, 1, 1, 1)
+		tooltip:AddLine(cattext)
 	else
-		tooltip:AddLine(name, 1, 1, 1)
+		tooltip:AddLine(text, 1, 1, 1)
 	end
 	scriptDispatcher:Fire('OnTooltipUpdate', header, tooltip)
 end
@@ -340,7 +357,7 @@ function sectionProto:SetSizeInSlots(width, height)
 	if width == 0 or height == 0 then
 		self:SetSize(0.5, 0.5)
 	else
-		if width < 8 then width = 8 end
+		if width < 5 then width = 5 end
 		self:SetSize(
 			SLOT_OFFSET * width - ITEM_SPACING,
 			HEADER_SIZE + SLOT_OFFSET * height - ITEM_SPACING
@@ -496,7 +513,7 @@ function addon:SetSortingOrder(order)
 end
 
 function CompareButtons(a, b)
-	local linkA, linkB = a and a:GetItemLink(), b and b:GetItemLink()
+	local linkA, linkB = a:GetItemLink(), b:GetItemLink()
 	if linkA and linkB then
 		if linkA ~= linkB then
 			return itemCompareCache[format("%s;%s", linkA, linkB)]

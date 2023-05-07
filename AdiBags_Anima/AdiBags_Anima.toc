@@ -1,0 +1,8 @@
+## Interface: 100100
+## Title: AdiBags |cffe6cc80Anima|r
+## IconTexture: 3528288
+## Notes: Adds an Anima items filter to AdiBags
+## Author: Saxayone, updated by Newsom
+## Version: 10.1
+## Dependencies: AdiBags
+AdiBags_Anima.lua

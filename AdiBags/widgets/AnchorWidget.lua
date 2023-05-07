@@ -123,9 +123,6 @@ function anchorProto:StartMoving(button)
 	else
 		target:StartMoving()
 	end
-	if not addon.db.profile.hideAnchor then
-		self.corner:Show()
-	end
 	if self.OnMovingStarted then
 		self:OnMovingStarted()
 	end
@@ -139,7 +136,6 @@ function anchorProto:StopMoving()
 		self.toggleMovable = nil
 		target:SetMovable(false)
 	end
-	self.corner:Hide()
 	if target == self then
 		anchorParentProto.StopMovingOrSizing(self)
 	else
@@ -171,16 +167,9 @@ function bagAnchorProto:OnCreate(parent, name, label)
 end
 
 function bagAnchorProto:UpdateOperatingMode()
-	if addon.db.profile.positionMode == "manual" then
 		self:SetScript('OnMouseDown', self.StartMoving)
 		self:SetScript('OnMouseUp', self.StopMoving)
 		self:SetScript('OnHide', self.StopMoving)
-	else
-		self:StopMoving()
-		self:SetScript('OnMouseDown', nil)
-		self:SetScript('OnMouseUp', nil)
-		self:SetScript('OnHide', nil)
-	end
 end
 
 function bagAnchorProto:AdiBags_ConfigChanged(_, name)
@@ -190,22 +179,12 @@ function bagAnchorProto:AdiBags_ConfigChanged(_, name)
 end
 
 function bagAnchorProto:OnClick(mouseButton)
-	if mouseButton == "RightButton" then
-		addon:OpenOptions()
-		
-		--[[
-		if IsAltKeyDown() then
-			if addon.db.profile.positionMode == "anchored" then
-				addon.db.profile.positionMode = "manual"
-			else
-				addon.db.profile.positionMode = "anchored"
-			end
-			addon:SendMessage('AdiBags_ConfigChanged', 'positionMode')
-		elseif addon.db.profile.positionMode == "anchored" then
-			addon:ToggleAnchor()
-		end
-		]]--
-	end
+	return
+end
+
+function bagAnchorProto:OnTooltipUpdate(tooltip)
+	tooltip:AddLine(self.label, 1, 1, 1)
+	tooltip:AddLine(L['Drag to move this bag.'])
 end
 
 function addon:CreateBagAnchorWidget(...) return bagAnchorClass:Create(...) end

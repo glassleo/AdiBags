@@ -29,18 +29,25 @@ local GameTooltip = _G.GameTooltip
 local GetItemInfo = _G.GetItemInfo
 local hooksecurefunc = _G.hooksecurefunc
 local IsAddOnLoaded = _G.IsAddOnLoaded
-local ITEM_QUALITY_POOR = _G.Enum.ItemQuality.Poor
-local ITEM_QUALITY_UNCOMMON = _G.Enum.ItemQuality.Uncommon
+local ITEM_QUALITY_POOR
+local ITEM_QUALITY_UNCOMMON
+if addon.isRetail then
+	ITEM_QUALITY_POOR = _G.Enum.ItemQuality.Poor
+	ITEM_QUALITY_UNCOMMON = _G.Enum.ItemQuality.Uncommon
+else
+	ITEM_QUALITY_POOR = _G.LE_ITEM_QUALITY_POOR
+	ITEM_QUALITY_UNCOMMON = _G.LE_ITEM_QUALITY_UNCOMMON
+end
 local print = _G.print
 local select = _G.select
 local setmetatable = _G.setmetatable
 local tonumber = _G.tonumber
 local type = _G.type
-local UseContainerItem = _G.UseContainerItem
+local UseContainerItem = C_Container and _G.C_Container.UseContainerItem or _G.UseContainerItem
 local wipe = _G.wipe
 --GLOBALS>
 
-local JUNK = GetItemSubClassInfo(LE_ITEM_CLASS_MISCELLANEOUS, 0)
+local JUNK = GetItemSubClassInfo(_G.Enum.ItemClass.Miscellaneous, 0)
 local JUNK_KEY = addon.BuildSectionKey(JUNK, JUNK)
 
 local mod = addon:RegisterFilter("Junk", 85, "ABEvent-1.0", "AceHook-3.0")
@@ -191,6 +198,9 @@ function mod:OnClickSectionHeader(_, header, button)
 				UseContainerItem(bag, slot)
 				stacks = stacks + 1
 			end
+		end
+		if stacks == 0 then
+			print(format("|cfffee00%s %s: %s|r", addonName, JUNK, L['Nothing to sell.']))
 		end
 	end
 end

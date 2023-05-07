@@ -221,7 +221,7 @@ function addon:GetPool(name)
 	return name and pools[name]
 end
 
---[===[@debug@
+--[==[@debug@
 -- Globals: SLASH_ADIBAGSOODEBUG1
 SLASH_ADIBAGSOODEBUG1 = "/aboo"
 function SlashCmdList.ADIBAGSOODEBUG()
@@ -232,7 +232,7 @@ function SlashCmdList.ADIBAGSOODEBUG()
 	print('Pools:')
 	for name, pool in pairs(pools) do
 		local heapSize, numActives = 0, 0
-		for k in pairs(pool.actives) do
+		for k in pairs(pool.activtes) do
 			numActives = numActives + 1
 		end
 		for k in pairs(pool.heap) do
@@ -241,4 +241,4 @@ function SlashCmdList.ADIBAGSOODEBUG()
 		print(format("- %s: heap size: %d, number of active objects: %d", name, heapSize, numActives))
 	end
 end
---@end-debug@]===]
+--@end-debug@]==]

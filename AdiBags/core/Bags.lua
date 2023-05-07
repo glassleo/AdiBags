@@ -25,7 +25,13 @@ local L = addon.L
 --<GLOBALS
 local _G = _G
 local BankFrame = _G.BankFrame
+local OpenAllBags = _G.OpenAllBags
+local CloseAllBags = _G.CloseAllBags
+local IsBagOpen = _G.IsBagOpen
 local CloseBankFrame = _G.CloseBankFrame
+local SortBags = C_Container and _G.C_Container.SortBags or _G.SortBags
+local SortBankBags = C_Container and _G.C_Container.SortBankBags or _G.SortBankBags
+local SortReagentBankBags = C_Container and _G.C_Container.SortReagentBankBags or _G.SortReagentBankBags
 local ipairs = _G.ipairs
 local pairs = _G.pairs
 local setmetatable = _G.setmetatable
@@ -48,12 +54,12 @@ function bagProto:OnEnable()
 	local open = false
 	for id in pairs(self.bagIds) do
 		local frame = addon:GetContainerFrame(id)
-		if frame then
+		if IsBagOpen(id) then
 			open = true
-			frame:Hide()
 		end
 		hookedBags[id] = self
 	end
+	CloseAllBags()
 	if self.PostEnable then
 		self:PostEnable()
 	end
@@ -66,21 +72,17 @@ end
 function bagProto:OnDisable()
 	local open = self:IsOpen()
 	self:Close()
+
 	for id in pairs(self.bagIds) do
 		hookedBags[id] = nil
-		if open then
-			addon:GetContainerFrame(id, true)
-		end
+	end
+	if open then
+		OpenAllBags()
 	end
 	if self.PostDisable then
 		self:PostDisable()
 	end
 	self:Debug('Disabled')
-end
-
-function adebug(message, ...)
-	print("Sending", message, ...)
-	addon:SendMessage(message, ...)
 end
 
 function bagProto:Open()
@@ -93,16 +95,15 @@ function bagProto:Open()
 		end
 		frame:Show()
 		addon:SendMessage('AdiBags_BagOpened', self.bagName, self)
-		--print('AdiBags_BagOpened', self.bagName, self)
 
 		-- bag update fix
-		C_Timer.After(0.2, function()
+		C_Timer.After(0.1, function()
 			-- Force refresh all bags
 			addon:SendMessage('AdiBags_BagUpdated', { [-3] = true, [-1] = true, [0] = true, [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true, [9] = true, [10] = true, [11] = true, })
 			addon:SendMessage('AdiBags_FiltersChanged')
-			addon:SendMessage("AdiBags_UpdateAllButtons")
+			--addon:SendMessage("AdiBags_UpdateAllButtons")
 		end)
-		
+
 		return true
 	end
 end
@@ -213,6 +214,7 @@ do
 	local backpack = addon:NewBag("Backpack", 10, false, 'AceHook-3.0')
 
 	function backpack:PostEnable()
+		addon:EnableHooks()
 		self:RegisterMessage('AdiBags_InteractingWindowChanged')
 	end
 
@@ -233,6 +235,10 @@ do
 		PlaySound(SOUNDKIT.UI_BAG_SORTING_01)
 		SortBags()
 		C_Timer.After(1, function() addon:OpenBackpack() end)
+	end
+
+	function backpack:PostDisable()
+		addon:DisableHooks()
 	end
 end
 
@@ -287,7 +293,7 @@ do
 
 	function bank:PreOpen()
 		self.hooks[BankFrame].Show(BankFrame)
-		if addon.db.profile.autoDeposit and not IsModifierKeyDown() then
+		if addon.isRetail and addon.db.profile.autoDeposit and not IsModifierKeyDown() then
 			DepositReagentBank()
 		end
 	end

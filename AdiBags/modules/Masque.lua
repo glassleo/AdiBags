@@ -1,6 +1,6 @@
 --[[
 AdiBags - Adirelle's bag addon.
-Copyright 2010-2014 Adirelle (adirelle@gmail.com)
+Copyright 2010-2023 Adirelle (adirelle@gmail.com)
 All rights reserved.
 This file is part of AdiBags.
 AdiBags is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@ local function isBankButton(button)
 	return not not addon.BAG_IDS.BANK[button.bag]
 end
 
-local function isMasqueGroupEnabled(group) -- doesn't seem to be an api for this
+local function isMasqueGroupEnabled(group)
 	return not group.db.Disabled
 end
 
